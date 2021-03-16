@@ -332,33 +332,36 @@ function CreatePDF($hostarray) {
 		}
 
 	// Events
+		$has_event = false;
 		if ($TriggersOn == "yes" ) {
 			$events = ZabbixAPI::fetch_array('event','get',array('output'=>array('eventid','clock','acknowledged', 'name', 'value', 'object', 'objectid'),'select_acknowledges'=>'extend','selectHosts'=>'extend',
 						'time_from'=>$starttime, 'time_till'=>$endtime, 'sortfield'=>'clock','hostids'=>$hostid));
 
 			if ($debug) { echo "<pre>" ; print_r($alerts); echo "</pre><br/>\n"; }
-			$stringData = "1<Trigger data for ".$hostname.">\n\n";
-			fwrite($fh,$stringData);
 
 				if (!empty($events[0])) {
 					$events_dict = array();
 					foreach($events as $eventkey=>$event) {
 						if (preg_match($myevents, $event["name"])) {
 							$events_dict[$event["name"]][] = $event["clock"];
+							$has_event = true;
 						}
 					}
 
+					if ($has_event) {
+						$stringData = "1<Trigger data for ".$hostname.">\n\n";
+						fwrite($fh,$stringData);
+					}
+
 					foreach($events_dict as $event_name => $event_times) {
-						$stringData = "2<Trigger " . $event_name . ">\n";
+						$stringData = "2<Trigger " . $event_name . ">\n\n";
+						fwrite($fh, $stringData);
+						$stringData = "Occurred " . sizeof($event_times) . " times.\n";
 						fwrite($fh, $stringData);
 						$stringData="#C\n"; // Use CODE font
 	    				fwrite($fh, $stringData);
-						foreach ($event_times as $time) {
-							$tstamp=$time;
-							$stringData="<b>  Occurred at: ".date("Y-m-d H:m:s",$tstamp);
-							fwrite($fh, $stringData);
-							fwrite($fh, "</b>\n");
-						}
+	    				$stringData = "<b>First time " . date("Y-m-d H:m:s",$event_times[0]) . ", last time " . date("Y-m-d H:m:s",$event_times[sizeof($event_times) - 1]) . "</b>\n";
+						fwrite($fh, $stringData);
 						$stringData="#c\n\n"; // Use normal font
 						fwrite($fh, $stringData);
 					}
@@ -371,7 +374,7 @@ function CreatePDF($hostarray) {
 			if ($debug) { flush(); ob_flush(); flush(); }
 		}
 	// MMO: Back to before
-		if ( $GraphsOn == "yes" ) {
+		if ( $GraphsOn == "yes" && !($TriggersOn && !$has_event) ) {
 			$count = 0;
 			if ( $TriggersOn == "yes"  or  $ItemsOn == "yes"  or $TrendsOn == "yes" ) {
 				fwrite($fh,"#NP\n");
@@ -425,7 +428,7 @@ function CreatePDF($hostarray) {
 				fwrite($fh, "#NP\n");
 			}
 		}
-		if ( $ItemGraphsOn == "yes" ) {
+		if ( $ItemGraphsOn == "yes" && !($TriggersOn && !$has_event) ) {
 			$count = 0;
 /*			if ( $TriggersOn == "yes" ) {
 				fwrite($fh,"#NP\n");
