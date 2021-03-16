@@ -108,7 +108,7 @@ if (isset($_GET['ReportRange'])) {
 	}
 }
 if (isset($_GET['mygraphs2'])) { $mygraphs=$_GET['mygraphs2']; } // Use the manually specified values for what graphs to show
-if (isset($_GET['mytriggers2'])) { $mytriggers=$_GET['mytriggers2']; } // Use the manually specified values for what triggers to show
+if (isset($_GET['myevents2'])) { $myevents=$_GET['myevents2']; } // Use the manually specified values for what triggers to show
 if (isset($_GET['myitems2'])) { $myitemgraphs=$_GET['myitems2']; } // Use the manually specified values for what graphs to show
 
 // Calculate report starttime and endtime
@@ -279,8 +279,9 @@ $pdf->selectFont($mainFont);
 
 // modified to use the local file if it can
 if (file_exists($pdf_logo)){
-  //$pdf->addPngFromFile($pdf_logo,199,$pdf->y-375,200,0);
-  $pdf->addPngFromFile($pdf_logo,50,$pdf->y,200,0);
+    //$pdf->addPngFromFile($pdf_logo,199,$pdf->y-375,200,0);
+  $pdf_gd = imagecreatefrompng($pdf_logo);
+  $pdf->addImage($pdf_gd,170,$pdf->y+150,250,0);
   if ($debug) {
     echo "$pdf_logo written to PDF-file ...<br/>";
   }

@@ -19,7 +19,7 @@ $showdates = false; // Prepend date and time on items and trends, or leave it ou
 // Would you like to limit what graphs are displayed? Enter partial matches (or complete names) here.
 // $mygraphs = '#.*#'; // Match all graphs
 $mygraphs = '#(Ping|CPU load|CPU usage|CPU util|processor|Disk space|Swap|Ethernet|Memory usage|^Traffic on |traffic on eth)#';
-$mytriggers = '#(Utilization of|farm connection|Average Latency|Number of processes|Cache % Hit)#';
+$myevents = '#(Utilization of|farm connection|Average Latency|Number of processes|Cache % Hit)#';
 $myitemgraphs = '#(Utilization of|farm connection|Average Latency|Number of processes|Cache % Hit)#';
 
 # zabbix server info(user must have API access)
