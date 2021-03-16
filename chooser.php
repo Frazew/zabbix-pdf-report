@@ -189,6 +189,7 @@ ReadArray($host_groups);
 <input type="checkbox" name="TrendsOn" value="yes"> Show configured trends (SLA-ish)</input>
 </p>
 <p>
+	<input type="string" name="mytriggers2" style="font-size: 10px;"  size=80 value="<?php echo $mytriggers; ?>"> &uarr; Triggers to show (#.*# = all):</input>
 <input type="string" name="mygraphs2" style="font-size: 10px;"  size=80 value="<?php echo $mygraphs; ?>"> &uarr; Graphs to show (#.*# = all):</input>
 <input type="string" name="myitems2" style="font-size: 10px;"  size=80 value="<?php echo $myitemgraphs; ?>"> &uarr; Items to graph (#.*# = all):</input>
 </p>

@@ -193,7 +193,7 @@ function updown($value) {
 
 function CreatePDF($hostarray) {
 	global $stime, $timeperiod, $tmp_pdf_data, $z_tmpimg_path, $debug, $showdates;
-	global $starttime, $endtime, $TriggersOn, $GraphsOn, $ItemGraphsOn, $ItemsOn, $items, $TrendsOn, $trends, $mygraphs, $myitemgraphs;
+	global $starttime, $endtime, $TriggersOn, $GraphsOn, $ItemGraphsOn, $ItemsOn, $items, $TrendsOn, $trends, $mygraphs, $myevents, $myitemgraphs;
 
 	if ($debug) { echo "Time scope - starttime: $starttime, endtime: $endtime - stime: $stime<BR/><p>\n"; }
 
@@ -333,50 +333,40 @@ function CreatePDF($hostarray) {
 
 	// Events
 		if ($TriggersOn == "yes" ) {
-			$alerts = ZabbixAPI::fetch_array('alert','get',array('output'=>array('alertid','eventid','clock','subject','message','sendto'),'hostids'=>$hostid,
-				'time_from'=>$starttime, 'time_till'=>$endtime, 'sortfield'=>'clock'))
-			//$events = ZabbixAPI::fetch_array('event','get',array('output'=>array('extend'),'hostids'=>$hostid))
-				or die('Unable to get alerts: '.print_r(ZabbixAPI::getLastError(),true));
+			$events = ZabbixAPI::fetch_array('event','get',array('output'=>array('eventid','clock','acknowledged', 'name', 'value', 'object', 'objectid'),'select_acknowledges'=>'extend','selectHosts'=>'extend',
+						'time_from'=>$starttime, 'time_till'=>$endtime, 'sortfield'=>'clock','hostids'=>$hostid));
 
+			if ($debug) { echo "<pre>" ; print_r($alerts); echo "</pre><br/>\n"; }
+			$stringData = "1<Trigger data for ".$hostname.">\n\n";
+			fwrite($fh,$stringData);
 
-			if (!empty($alerts[0])) {
-				if ($debug) { echo "<pre>" ; print_r($alerts); echo "</pre><br/>\n"; }
-				$stringData = "1<Trigger data for ".$hostname.">\n\n";
-				fwrite($fh,$stringData);
-			    $stringData="#C\n"; // Use CODE font
-			    fwrite($fh, $stringData);
-				//asort($alerts);
-				foreach($alerts as $alertkey=>$alert) {
-					//$sub=iconv("UTF-8","ISO-8859-1",$alert['subject']);
-					$sub=$alert['subject'];
-					$tstamp=$alert['clock'];
-					$aid=$alert['alertid'];
-					$eid=$alert['eventid'];
-					$stringData=date("Y-m-d H:m:s",$tstamp) . " - " . $sub . "\n";
-					fwrite($fh, $stringData);
+				if (!empty($events[0])) {
+					$events_dict = array();
+					foreach($events as $eventkey=>$event) {
+						if (preg_match($myevents, $event["name"])) {
+							$events_dict[$event["name"]][] = $event["clock"];
+						}
+					}
 
-					$events = ZabbixAPI::fetch_array('event','get',array('output'=>array('eventid','clock','acknowledged'),'acknowledged'=>'true','select_acknowledges'=>'extend','eventids'=>$eid,
-						'time_from'=>$starttime, 'time_till'=>$endtime, 'sortfield'=>'clock'))
-						or die('Unable to get events: '.print_r(ZabbixAPI::getLastError(),true));
-
-					if (!empty($events[0])) {
-						foreach($events as $eventkey=>$event) {
-							if ($debug) { echo "<pre>" ; print_r($event); echo "</pre><br/>\n"; }
-							$msg=$event['acknowledges'][0]['message'];
-							$tstamp=$event['acknowledges'][0]['clock'];
-							$stringData="<b>  Acknowledged at: ".date("Y-m-d H:m:s",$tstamp) . " - " . $msg . " (" . $alias . ")";
+					foreach($events_dict as $event_name => $event_times) {
+						$stringData = "2<Trigger " . $event_name . ">\n";
+						fwrite($fh, $stringData);
+						$stringData="#C\n"; // Use CODE font
+	    				fwrite($fh, $stringData);
+						foreach ($event_times as $time) {
+							$tstamp=$time;
+							$stringData="<b>  Occurred at: ".date("Y-m-d H:m:s",$tstamp);
 							fwrite($fh, $stringData);
 							fwrite($fh, "</b>\n");
 						}
-	/*				fclose($fh); */
-					if ($debug) { flush(); ob_flush(); flush(); }
+						$stringData="#c\n\n"; // Use normal font
+						fwrite($fh, $stringData);
 					}
 				}
-			}
+/*				fclose($fh); */
+				if ($debug) { flush(); ob_flush(); flush(); }
+												fwrite($fh,"\n");
 	/*		$fh = fopen($tmp_pdf_data, 'a') or die("Can't open $tmp_pdf_data for writing!"); */
-			fwrite($fh,"\n");
-			$stringData="#c\n\n"; // Use normal font
-			fwrite($fh, $stringData);
 	/*		fclose($fh); */
 			if ($debug) { flush(); ob_flush(); flush(); }
 		}

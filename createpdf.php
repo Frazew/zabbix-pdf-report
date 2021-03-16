@@ -108,6 +108,7 @@ if (isset($_GET['ReportRange'])) {
 	}
 }
 if (isset($_GET['mygraphs2'])) { $mygraphs=$_GET['mygraphs2']; } // Use the manually specified values for what graphs to show
+if (isset($_GET['mytriggers2'])) { $mytriggers=$_GET['mytriggers2']; } // Use the manually specified values for what triggers to show
 if (isset($_GET['myitems2'])) { $myitemgraphs=$_GET['myitems2']; } // Use the manually specified values for what graphs to show
 
 // Calculate report starttime and endtime
